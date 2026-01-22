@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import io from 'socket.io-client';
-import WelcomeScreen from './components/WelcomeScreen';
 import RoomSelector from './components/RoomSelector';
 import CodeEditor from './components/CodeEditor';
 import './App.css';
@@ -60,9 +59,8 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<WelcomeScreen />} />
           <Route 
-            path="/rooms" 
+            path="/" 
             element={
               <RoomSelector 
                 onJoinRoom={joinRoom}
@@ -85,6 +83,7 @@ function App() {
               )
             } 
           />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </Router>
