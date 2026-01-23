@@ -108,7 +108,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const { roomId, code } = data;
 
-    if (!roomId || !code) {
+    if (!roomId || code === undefined) {
       console.warn('Неверные данные для code-change:', data);
       return;
     }

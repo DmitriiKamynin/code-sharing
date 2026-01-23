@@ -1,36 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { useParams } from 'react-router-dom';
-import { Socket } from 'socket.io-client';
+import { useNavigate, useParams } from 'react-router-dom';
+import { io, Socket } from 'socket.io-client';
 import { Room, Participant, CodeChangeData, RoomStateData, EditorRef } from '../types';
 import { editor } from 'monaco-editor';
 
-interface CodeEditorProps {
-  participants: Participant[];
-  socket: Socket;
-  onLeaveRoom: () => void;
-  room: Room;
-}
-
-const CodeEditor: React.FC<CodeEditorProps> = ({ participants, socket, onLeaveRoom, room }) => {
-  const { roomId } = useParams<{ roomId: string }>();
+const CodeEditor: React.FC = () => {
+  const { roomId } = useParams<{ roomId: string }>() as { roomId: string };
+  const navigate = useNavigate();
   const [code, setCode] = useState<string>('// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();');
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const editorRef = useRef<EditorRef>(null);
   const isInitialLoad = useRef<boolean>(true);
 
-  useEffect(() => {
-    if (!socket || !roomId) return;
+  let socket: Socket;
 
-    // Обработчики событий сокета
-    const handleCodeChange = (data: CodeChangeData) => {
-      if (data.roomId === roomId && data.userId !== socket.id && data.code !== code) {
-        setCode(data.code);
-        if (editorRef.current) {
-          editorRef.current.setValue(data.code);
-        }
-      }
-    };
+  useEffect(() => {
+    socket = io('http://localhost:3001?roomId=' + roomId);
+
 
     const handleConnect = () => {
       setIsConnected(true);
@@ -46,10 +33,34 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ participants, socket, onLeaveRo
       }
     };
 
+    const handleCodeChange = (data: CodeChangeData) => {
+      if (data.roomId === roomId && data.userId !== socket.id && data.code !== code) {
+        setCode(data.code);
+        if (editorRef.current) {
+          editorRef.current.setValue(data.code);
+        }
+      }
+    };
+
     socket.on('code-change', handleCodeChange);
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('room-state', handleRoomState);
+
+    return () => {
+      socket.off('code-change', handleCodeChange);
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('room-state', handleRoomState);
+      socket.disconnect();
+    };
+  }, []);
+
+
+  useEffect(() => {
+    if (!socket || !roomId) return;
+    // Обработчики событий сокета
+
 
     // Запрос текущего состояния комнаты при подключении
     if (isInitialLoad.current) {
@@ -58,12 +69,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ participants, socket, onLeaveRo
     }
 
     return () => {
-      socket.off('code-change', handleCodeChange);
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('room-state', handleRoomState);
+
     };
-  }, [socket, roomId, code]);
+  }, [roomId, code]);
 
   const handleEditorChange = (value: string | undefined): void => {
     if (!roomId || value === undefined) return;
@@ -133,21 +141,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ participants, socket, onLeaveRo
           </button>
         </div>
 
-        <div className="participants" style={{ marginBottom: '20px' }}>
-          <h4 style={{ color: '#ffffff', marginBottom: '10px' }}>
-            Участники ({participants.length})
-          </h4>
-          {participants.map((participant) => (
-            <div key={participant.id} className="participant">
-              {participant.username}
-            </div>
-          ))}
-        </div>
-
         <div style={{ marginTop: 'auto' }}>
           <button 
             className="btn btn-secondary" 
-            onClick={onLeaveRoom}
+            onClick={() => navigate('/')}
             style={{ width: '100%' }}
           >
             Покинуть комнату

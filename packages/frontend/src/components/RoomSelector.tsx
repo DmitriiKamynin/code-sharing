@@ -3,16 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 const API_URL = 'http://localhost:3001/api/rooms';
 
-interface RoomSelectorProps {
-  onJoinRoom: (roomId: string, username: string) => void;
-  isConnected: boolean;
-}
-
 interface RoomResponse {
   id: string;
 }
 
-const RoomSelector: React.FC<RoomSelectorProps> = ({ onJoinRoom, isConnected }) => {
+const RoomSelector: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
@@ -29,7 +24,6 @@ const RoomSelector: React.FC<RoomSelectorProps> = ({ onJoinRoom, isConnected }) 
 
       if (response.ok) {
         const newRoom: RoomResponse = await response.json();
-        onJoinRoom(newRoom.id, 'guest');
         navigate(`/room/${newRoom.id}`);
       } else {
         alert('Ошибка при создании комнаты');
