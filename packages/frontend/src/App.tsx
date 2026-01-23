@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 import RoomSelector from './components/RoomSelector';
 import CodeEditor from './components/CodeEditor';
 import './App.css';
+import { Room, Participant, RoomJoinedData } from './types';
 
-const socket = io('http://localhost:3001');
+const socket: Socket = io('http://localhost:3001');
 
 function App() {
-  const [currentRoom, setCurrentRoom] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [participants, setParticipants] = useState([]);
+  const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -21,16 +22,16 @@ function App() {
       setIsConnected(false);
     });
 
-    socket.on('room-joined', (data) => {
+    socket.on('room-joined', (data: RoomJoinedData) => {
       setCurrentRoom(data.room);
       setParticipants(data.participants || []);
     });
 
-    socket.on('participant-joined', (participant) => {
+    socket.on('participant-joined', (participant: Participant) => {
       setParticipants(prev => [...prev, participant]);
     });
 
-    socket.on('participant-left', (participantId) => {
+    socket.on('participant-left', (participantId: string) => {
       setParticipants(prev => prev.filter(p => p.id !== participantId));
     });
 
@@ -43,11 +44,11 @@ function App() {
     };
   }, []);
 
-  const joinRoom = (roomId, username) => {
+  const joinRoom = (roomId: string, username: string): void => {
     socket.emit('join-room', { roomId, username });
   };
 
-  const leaveRoom = () => {
+  const leaveRoom = (): void => {
     if (currentRoom) {
       socket.emit('leave-room', { roomId: currentRoom.id });
       setCurrentRoom(null);
@@ -91,4 +92,3 @@ function App() {
 }
 
 export default App;
-

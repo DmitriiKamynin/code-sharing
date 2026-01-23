@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const API_URL = 'http://localhost:3001/api/rooms';
 
-const RoomSelector = ({ onJoinRoom }) => {
-  const [loading, setLoading] = useState(false);
+interface RoomSelectorProps {
+  onJoinRoom: (roomId: string, username: string) => void;
+  isConnected: boolean;
+}
+
+interface RoomResponse {
+  id: string;
+}
+
+const RoomSelector: React.FC<RoomSelectorProps> = ({ onJoinRoom, isConnected }) => {
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const createRoom = async () => {
+  const createRoom = async (): Promise<void> => {
     setLoading(true);
     try {
       const response = await fetch(API_URL, {
@@ -19,7 +28,7 @@ const RoomSelector = ({ onJoinRoom }) => {
       });
 
       if (response.ok) {
-        const newRoom = await response.json();
+        const newRoom: RoomResponse = await response.json();
         onJoinRoom(newRoom.id, 'guest');
         navigate(`/room/${newRoom.id}`);
       } else {

@@ -1,34 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useParams } from 'react-router-dom';
+import { Socket } from 'socket.io-client';
+import { Room, Participant, CodeChangeData, RoomStateData, EditorRef } from '../types';
+import { editor } from 'monaco-editor';
 
-const CodeEditor = ({ participants, socket, onLeaveRoom }) => {
-  const { roomId } = useParams();
-  const [code, setCode] = useState('// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();');
-  const [isConnected, setIsConnected] = useState(true);
-  const editorRef = useRef(null);
-  const isInitialLoad = useRef(true);
+interface CodeEditorProps {
+  participants: Participant[];
+  socket: Socket;
+  onLeaveRoom: () => void;
+  room: Room;
+}
+
+const CodeEditor: React.FC<CodeEditorProps> = ({ participants, socket, onLeaveRoom, room }) => {
+  const { roomId } = useParams<{ roomId: string }>();
+  const [code, setCode] = useState<string>('// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();');
+  const [isConnected, setIsConnected] = useState<boolean>(true);
+  const editorRef = useRef<EditorRef>(null);
+  const isInitialLoad = useRef<boolean>(true);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !roomId) return;
 
     // Обработчики событий сокета
-    socket.on('code-change', (data) => {
+    const handleCodeChange = (data: CodeChangeData) => {
       if (data.roomId === roomId && data.userId !== socket.id && data.code !== code) {
         setCode(data.code);
         if (editorRef.current) {
           editorRef.current.setValue(data.code);
         }
       }
-    });
+    };
 
-    socket.on('connect', () => {
+    const handleConnect = () => {
       setIsConnected(true);
-    });
+    };
 
-    socket.on('disconnect', () => {
+    const handleDisconnect = () => {
       setIsConnected(false);
-    });
+    };
+
+    const handleRoomState = (data: RoomStateData) => {
+      if (data.roomId === roomId) {
+        setCode(data.code || code);
+      }
+    };
+
+    socket.on('code-change', handleCodeChange);
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('room-state', handleRoomState);
 
     // Запрос текущего состояния комнаты при подключении
     if (isInitialLoad.current) {
@@ -36,21 +57,17 @@ const CodeEditor = ({ participants, socket, onLeaveRoom }) => {
       isInitialLoad.current = false;
     }
 
-    socket.on('room-state', (data) => {
-      if (data.roomId === roomId) {
-        setCode(data.code || code);
-      }
-    });
-
     return () => {
-      socket.off('code-change');
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('room-state');
+      socket.off('code-change', handleCodeChange);
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('room-state', handleRoomState);
     };
   }, [socket, roomId, code]);
 
-  const handleEditorChange = (value) => {
+  const handleEditorChange = (value: string | undefined): void => {
+    if (!roomId || value === undefined) return;
+    
     if (value !== code) {
       setCode(value);
       socket.emit('code-change', {
@@ -61,7 +78,7 @@ const CodeEditor = ({ participants, socket, onLeaveRoom }) => {
     }
   };
 
-  const handleEditorDidMount = (editor) => {
+  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor): void => {
     editorRef.current = editor;
     
     // Настройка редактора
@@ -94,7 +111,8 @@ const CodeEditor = ({ participants, socket, onLeaveRoom }) => {
     });
   };
 
-  const copyRoomLink = () => {
+  const copyRoomLink = (): void => {
+    if (!roomId) return;
     const link = `${window.location.origin}/room/${roomId}`;
     navigator.clipboard.writeText(link);
     alert('Ссылка на комнату скопирована в буфер обмена!');
@@ -195,4 +213,3 @@ const CodeEditor = ({ participants, socket, onLeaveRoom }) => {
 };
 
 export default CodeEditor;
-
