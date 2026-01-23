@@ -10,11 +10,6 @@ export class RoomsController {
     return this.roomsService.createRoom(body.name);
   }
 
-  @Get()
-  getAllRooms(): Room[] {
-    return this.roomsService.getAllRooms();
-  }
-
   @Get(':id')
   getRoom(@Param('id') id: string): Room {
     const room = this.roomsService.getRoom(id);
@@ -22,14 +17,5 @@ export class RoomsController {
       throw new NotFoundException('Комната не найдена');
     }
     return room;
-  }
-
-  @Delete(':id')
-  deleteRoom(@Param('id') id: string): { success: boolean } {
-    const deleted = this.roomsService.deleteRoom(id);
-    if (!deleted) {
-      throw new NotFoundException('Комната не найдена');
-    }
-    return { success: true };
   }
 }

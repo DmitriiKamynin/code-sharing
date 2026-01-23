@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback} from 'react';
 import Editor from '@monaco-editor/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
@@ -12,12 +12,16 @@ const CodeEditor: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const editorRef = useRef<EditorRef>(null);
   const isInitialLoad = useRef<boolean>(true);
-
-  let socket: Socket;
+  const [socket, setSocket] = useState<Socket>();
 
   useEffect(() => {
-    socket = io('http://localhost:3001?roomId=' + roomId);
 
+    fetch(`http://localhost:3001/api/rooms/${roomId}`)
+      .then(res => res.json())
+      .then(res => setCode(res.code));
+
+    const socket = io('http://localhost:3001', { query: { roomId } });
+    setSocket(socket);
 
     const handleConnect = () => {
       setIsConnected(true);
@@ -25,12 +29,6 @@ const CodeEditor: React.FC = () => {
 
     const handleDisconnect = () => {
       setIsConnected(false);
-    };
-
-    const handleRoomState = (data: RoomStateData) => {
-      if (data.roomId === roomId) {
-        setCode(data.code || code);
-      }
     };
 
     const handleCodeChange = (data: CodeChangeData) => {
@@ -45,13 +43,11 @@ const CodeEditor: React.FC = () => {
     socket.on('code-change', handleCodeChange);
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
-    socket.on('room-state', handleRoomState);
 
     return () => {
       socket.off('code-change', handleCodeChange);
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
-      socket.off('room-state', handleRoomState);
       socket.disconnect();
     };
   }, []);
@@ -78,7 +74,7 @@ const CodeEditor: React.FC = () => {
     
     if (value !== code) {
       setCode(value);
-      socket.emit('code-change', {
+      socket?.emit('code-change', {
         roomId,
         code: value,
         userId: socket.id
