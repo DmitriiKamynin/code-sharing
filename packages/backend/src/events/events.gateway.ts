@@ -59,42 +59,11 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage('get-room-state')
-  handleGetRoomState(
-    @ConnectedSocket() client: CustomSocket,
-    @MessageBody() data: { roomId: string },
-  ) {
-    const { roomId } = data;
-    const room = this.roomsService.getRoom(roomId);
-
-    if (room) {
-      client.emit('room-state', {
-        roomId,
-        code: room.code,
-        language: room.language,
-      });
-    }
-  }
-
-  @SubscribeMessage('update')
-  updateCode(
-    @ConnectedSocket() client: CustomSocket,
-    @MessageBody() data: any,
-  ): boolean {
-    if (client.roomId) {
-      return client.to(client.roomId).emit('update', data);
-    }
-    return false;
-  }
-
   @SubscribeMessage('run')
   runCode(
     @ConnectedSocket() client: CustomSocket,
     @MessageBody() data: any,
-  ): boolean {
-    if (client.roomId) {
-      return client.to(client.roomId).emit('run', 'code runed without errors');
-    }
-    return false;
+  ) {
+    client.to(client.roomId).emit('run', 'code runed without errors');
   }
 }
