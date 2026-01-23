@@ -2,31 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useParams } from 'react-router-dom';
 
-const CodeEditor = ({ room, participants, socket, onLeaveRoom }) => {
+const CodeEditor = ({ participants, socket, onLeaveRoom }) => {
   const { roomId } = useParams();
   const [code, setCode] = useState('// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();');
-  const [language, setLanguage] = useState('javascript');
   const [isConnected, setIsConnected] = useState(true);
   const editorRef = useRef(null);
   const isInitialLoad = useRef(true);
-
-  const languages = [
-    { value: 'javascript', label: 'JavaScript' },
-    { value: 'typescript', label: 'TypeScript' },
-    { value: 'python', label: 'Python' },
-    { value: 'java', label: 'Java' },
-    { value: 'cpp', label: 'C++' },
-    { value: 'csharp', label: 'C#' },
-    { value: 'go', label: 'Go' },
-    { value: 'rust', label: 'Rust' },
-    { value: 'php', label: 'PHP' },
-    { value: 'ruby', label: 'Ruby' },
-    { value: 'html', label: 'HTML' },
-    { value: 'css', label: 'CSS' },
-    { value: 'json', label: 'JSON' },
-    { value: 'xml', label: 'XML' },
-    { value: 'sql', label: 'SQL' }
-  ];
 
   useEffect(() => {
     if (!socket) return;
@@ -38,12 +19,6 @@ const CodeEditor = ({ room, participants, socket, onLeaveRoom }) => {
         if (editorRef.current) {
           editorRef.current.setValue(data.code);
         }
-      }
-    });
-
-    socket.on('language-change', (data) => {
-      if (data.roomId === roomId && data.userId !== socket.id) {
-        setLanguage(data.language);
       }
     });
 
@@ -64,18 +39,16 @@ const CodeEditor = ({ room, participants, socket, onLeaveRoom }) => {
     socket.on('room-state', (data) => {
       if (data.roomId === roomId) {
         setCode(data.code || code);
-        setLanguage(data.language || language);
       }
     });
 
     return () => {
       socket.off('code-change');
-      socket.off('language-change');
       socket.off('connect');
       socket.off('disconnect');
       socket.off('room-state');
     };
-  }, [socket, roomId, code, language]);
+  }, [socket, roomId, code]);
 
   const handleEditorChange = (value) => {
     if (value !== code) {
@@ -86,15 +59,6 @@ const CodeEditor = ({ room, participants, socket, onLeaveRoom }) => {
         userId: socket.id
       });
     }
-  };
-
-  const handleLanguageChange = (newLanguage) => {
-    setLanguage(newLanguage);
-    socket.emit('language-change', {
-      roomId,
-      language: newLanguage,
-      userId: socket.id
-    });
   };
 
   const handleEditorDidMount = (editor) => {
@@ -162,28 +126,6 @@ const CodeEditor = ({ room, participants, socket, onLeaveRoom }) => {
           ))}
         </div>
 
-        <div className="form-group">
-          <label>Язык программирования:</label>
-          <select
-            value={language}
-            onChange={(e) => handleLanguageChange(e.target.value)}
-            style={{
-              background: '#3c3c3c',
-              border: '1px solid #555',
-              color: 'white',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              fontSize: '14px'
-            }}
-          >
-            {languages.map((lang) => (
-              <option key={lang.value} value={lang.value}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div style={{ marginTop: 'auto' }}>
           <button 
             className="btn btn-secondary" 
@@ -222,7 +164,7 @@ const CodeEditor = ({ room, participants, socket, onLeaveRoom }) => {
         <div className="editor-container">
           <Editor
             height="100%"
-            language={language}
+            language="javascript"
             value={code}
             onChange={handleEditorChange}
             onMount={handleEditorDidMount}
