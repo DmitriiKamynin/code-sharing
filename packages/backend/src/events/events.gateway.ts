@@ -30,6 +30,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake.query.roomId as string;
     client.roomId = roomId;
     client.join(roomId);
+    console.log('Пользователь подключился:', client.id);
   }
 
   handleDisconnect(client: CustomSocket) {

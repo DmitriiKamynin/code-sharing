@@ -10,8 +10,6 @@ const CodeEditor: React.FC = () => {
   const navigate = useNavigate();
   const [code, setCode] = useState<string>('// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();');
   const [isConnected, setIsConnected] = useState<boolean>(true);
-  const editorRef = useRef<EditorRef>(null);
-  const isInitialLoad = useRef<boolean>(true);
   const [socket, setSocket] = useState<Socket>();
 
   useEffect(() => {
@@ -32,11 +30,10 @@ const CodeEditor: React.FC = () => {
     };
 
     const handleCodeChange = (data: CodeChangeData) => {
-      if (data.roomId === roomId && data.userId !== socket.id && data.code !== code) {
+      if (data.userId !== socket.id && data.code !== code) {
+        console.log('code-change', data);
+        console.log('code', code);
         setCode(data.code);
-        if (editorRef.current) {
-          editorRef.current.setValue(data.code);
-        }
       }
     };
 
@@ -52,66 +49,15 @@ const CodeEditor: React.FC = () => {
     };
   }, []);
 
-
-  useEffect(() => {
-    if (!socket || !roomId) return;
-    // Обработчики событий сокета
-
-
-    // Запрос текущего состояния комнаты при подключении
-    if (isInitialLoad.current) {
-      socket.emit('get-room-state', { roomId });
-      isInitialLoad.current = false;
-    }
-
-    return () => {
-
-    };
-  }, [roomId, code]);
-
   const handleEditorChange = (value: string | undefined): void => {
-    if (!roomId || value === undefined) return;
-    
-    if (value !== code) {
-      setCode(value);
-      socket?.emit('code-change', {
-        roomId,
-        code: value,
-        userId: socket.id
-      });
-    }
-  };
-
-  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor): void => {
-    editorRef.current = editor;
-    
-    // Настройка редактора
-    editor.updateOptions({
-      fontSize: 14,
-      minimap: { enabled: true },
-      scrollBeyondLastLine: false,
-      automaticLayout: true,
-      wordWrap: 'on',
-      lineNumbers: 'on',
-      renderWhitespace: 'selection',
-      selectOnLineNumbers: true,
-      roundedSelection: false,
-      readOnly: false,
-      cursorStyle: 'line',
-      glyphMargin: true,
-      folding: true,
-      lineDecorationsWidth: 10,
-      lineNumbersMinChars: 3,
-      renderLineHighlight: 'line',
-      scrollbar: {
-        vertical: 'auto',
-        horizontal: 'auto',
-        useShadows: false,
-        verticalHasArrows: false,
-        horizontalHasArrows: false,
-        verticalScrollbarSize: 10,
-        horizontalScrollbarSize: 10
-      }
+    if (code === value || value === undefined) return;
+    console.log('value', value);
+    console.log('code', code);
+    setCode(value);
+    socket?.emit('code-change', {
+      roomId,
+      code: value,
+      userId: socket.id
     });
   };
 
@@ -178,7 +124,6 @@ const CodeEditor: React.FC = () => {
             language="javascript"
             value={code}
             onChange={handleEditorChange}
-            onMount={handleEditorDidMount}
             theme="vs-dark"
             options={{
               selectOnLineNumbers: true,
