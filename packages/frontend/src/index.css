@@ -51,6 +51,38 @@ code {
 .editor-container {
   flex: 1;
   position: relative;
+  min-height: 0;
+}
+
+.terminal-container {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e;
+  border-top: 1px solid #3e3e42;
+  min-height: 0;
+}
+
+.terminal-header {
+  background-color: #2d2d30;
+  padding: 8px 15px;
+  border-bottom: 1px solid #3e3e42;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.terminal-output {
+  flex: 1;
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #d4d4d4;
+  background-color: #1e1e1e;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.5;
 }
 
 .header {

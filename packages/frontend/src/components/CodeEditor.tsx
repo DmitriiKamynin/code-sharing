@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
-import { Room, Participant, CodeChangeData, RoomStateData, EditorRef } from '../types';
-import { editor } from 'monaco-editor';
+import { CodeChangeData } from '../types';
 
 const CodeEditor: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>() as { roomId: string };
@@ -11,6 +10,9 @@ const CodeEditor: React.FC = () => {
   const [code, setCode] = useState<string>('// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();');
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const [socket, setSocket] = useState<Socket>();
+  const [terminalOutput, setTerminalOutput] = useState<string>('');
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const terminalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
 
@@ -37,14 +39,24 @@ const CodeEditor: React.FC = () => {
       }
     };
 
+    const handleRun = (output: string) => {
+      setTerminalOutput(prev => prev + output + '\n');
+      setIsRunning(false);
+      if (terminalRef.current) {
+        terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+      }
+    };
+
     socket.on('code-change', handleCodeChange);
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
+    socket.on('run', handleRun);
 
     return () => {
       socket.off('code-change', handleCodeChange);
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
+      socket.off('run', handleRun);
       socket.disconnect();
     };
   }, []);
@@ -66,6 +78,17 @@ const CodeEditor: React.FC = () => {
     const link = `${window.location.origin}/room/${roomId}`;
     navigator.clipboard.writeText(link);
     alert('Ссылка на комнату скопирована в буфер обмена!');
+  };
+
+  const handleRunCode = (): void => {
+    if (!socket || !roomId || isRunning) return;
+    setIsRunning(true);
+    setTerminalOutput(prev => prev + `> Запуск кода...\n`);
+    socket.emit('run', { roomId, code });
+  };
+
+  const clearTerminal = (): void => {
+    setTerminalOutput('');
   };
 
   return (
@@ -116,34 +139,70 @@ const CodeEditor: React.FC = () => {
               {isConnected ? 'Подключено' : 'Отключено'}
             </div>
           </div>
+          <div className="controls">
+            <button 
+              className="btn btn-success" 
+              onClick={handleRunCode}
+              disabled={isRunning || !isConnected}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                opacity: (isRunning || !isConnected) ? 0.5 : 1
+              }}
+            >
+              {isRunning ? '⏳ Выполняется...' : '▶ Запустить'}
+            </button>
+          </div>
         </div>
 
-        <div className="editor-container">
-          <Editor
-            height="100%"
-            language="javascript"
-            value={code}
-            onChange={handleEditorChange}
-            theme="vs-dark"
-            options={{
-              selectOnLineNumbers: true,
-              roundedSelection: false,
-              readOnly: false,
-              cursorStyle: 'line',
-              automaticLayout: true,
-              fontSize: 14,
-              minimap: { enabled: true },
-              scrollBeyondLastLine: false,
-              wordWrap: 'on',
-              lineNumbers: 'on',
-              renderWhitespace: 'selection',
-              glyphMargin: true,
-              folding: true,
-              lineDecorationsWidth: 10,
-              lineNumbersMinChars: 3,
-              renderLineHighlight: 'line'
-            }}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div className="editor-container" style={{ flex: '1 1 60%', minHeight: 0 }}>
+            <Editor
+              height="100%"
+              language="javascript"
+              value={code}
+              onChange={handleEditorChange}
+              theme="vs-dark"
+              options={{
+                selectOnLineNumbers: true,
+                roundedSelection: false,
+                readOnly: false,
+                cursorStyle: 'line',
+                automaticLayout: true,
+                fontSize: 14,
+                minimap: { enabled: true },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                renderWhitespace: 'selection',
+                glyphMargin: true,
+                folding: true,
+                lineDecorationsWidth: 10,
+                lineNumbersMinChars: 3,
+                renderLineHighlight: 'line'
+              }}
+            />
+          </div>
+          
+          <div className="terminal-container">
+            <div className="terminal-header">
+              <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: 'bold' }}>Терминал</span>
+              <button 
+                className="btn btn-secondary" 
+                onClick={clearTerminal}
+                style={{ fontSize: '12px', padding: '4px 8px' }}
+              >
+                Очистить
+              </button>
+            </div>
+            <div 
+              ref={terminalRef}
+              className="terminal-output"
+            >
+              {terminalOutput || <span style={{ color: '#888' }}>Вывод появится здесь после запуска кода...</span>}
+            </div>
+          </div>
         </div>
       </div>
     </div>
