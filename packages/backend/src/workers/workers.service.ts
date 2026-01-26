@@ -13,8 +13,16 @@ export class WorkersService {
   async runCode(code: string, roomId: string) {
     const fileName = `${roomId}-${new Date().getTime()}.js`;
     await writeFile(`${TMP_PATH}/${fileName}`, code);
-    const result = await execAsync(`node ${TMP_PATH}/${fileName}`);
-    await unlink(`${TMP_PATH}/${fileName}`);
-    return result.stdout;
+    try {
+      const result = await execAsync(`node ${TMP_PATH}/${fileName}`);
+      return result.stdout;
+    }
+    catch (error) {
+      console.error(error);
+      return error.stderr;
+    }
+    finally {
+      await unlink(`${TMP_PATH}/${fileName}`);
+    }
   }
 }
