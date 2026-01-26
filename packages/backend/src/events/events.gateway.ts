@@ -57,7 +57,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (updated) {
       // Отправляем изменение всем участникам кроме отправителя
       client.to(roomId).emit('code-change', data);
-      console.log(`Код обновлен в комнате ${roomId} пользователем ${data.userId}`);
+      console.log(
+        `Код обновлен в комнате ${roomId} пользователем ${data.userId}`,
+      );
     } else {
       console.warn(`Не удалось обновить код в комнате ${roomId}`);
     }
@@ -70,6 +72,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const { roomId, code } = data;
     // Отправляем результат всем участникам комнаты, включая отправителя
-    this.server.to(roomId).emit('run', await this.workersService.runCode(code, roomId));
+    this.server
+      .to(roomId)
+      .emit('run', await this.workersService.runCode(code, roomId));
   }
 }

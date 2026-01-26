@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Body, Param, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  NotFoundException,
+} from '@nestjs/common';
 import { RoomsService, Room } from './rooms.service';
 
 @Controller('api/rooms')

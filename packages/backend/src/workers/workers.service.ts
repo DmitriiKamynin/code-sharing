@@ -16,12 +16,10 @@ export class WorkersService {
     try {
       const result = await execAsync(`node ${TMP_PATH}/${fileName}`);
       return result.stdout;
-    }
-    catch (error) {
+    } catch (error) {
       console.error(error);
       return error.stderr;
-    }
-    finally {
+    } finally {
       await unlink(`${TMP_PATH}/${fileName}`);
     }
   }
