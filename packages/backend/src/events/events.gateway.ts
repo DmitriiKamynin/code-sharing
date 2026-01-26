@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RoomsService } from '../rooms/rooms.service';
-import { WorkersService } from 'src/workers/workers.service';
+import { WorkersService } from '../workers/workers.service';
 
 interface CustomSocket extends Socket {
   roomId?: string;
@@ -64,12 +64,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('run')
-  runCode(
+  async runCode(
     @ConnectedSocket() client: CustomSocket,
     @MessageBody() data: { roomId: string; code: string },
   ) {
     const { roomId, code } = data;
     // Отправляем результат всем участникам комнаты, включая отправителя
-    this.server.to(roomId).emit('run', this.workersService.runCode(code));
+    this.server.to(roomId).emit('run', await this.workersService.runCode(code, roomId));
   }
 }
