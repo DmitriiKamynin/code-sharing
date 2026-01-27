@@ -7,23 +7,31 @@ import {
   Param,
   NotFoundException,
 } from '@nestjs/common';
-import { RoomsService, Room } from './rooms.service';
+import { RoomsService } from './rooms.service';
+import { Room } from './rooms.entity';
 
 @Controller('api/rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
   @Post()
-  createRoom(@Body() body: { name?: string }): Room {
-    return this.roomsService.createRoom(body.name);
+  async createRoom(): Promise<{ id: string; code: string }> {
+    const room = await this.roomsService.createRoom();
+    return {
+      id: room.shortId,
+      code: room.code,
+    };
   }
 
   @Get(':id')
-  getRoom(@Param('id') id: string): Room {
-    const room = this.roomsService.getRoom(id);
+  async getRoom(@Param('id') id: string): Promise<{ id: string; code: string }> {
+    const room = await this.roomsService.getRoom(id);
     if (!room) {
       throw new NotFoundException('Комната не найдена');
     }
-    return room;
+    return {
+      id: room.shortId,
+      code: room.code,
+    };
   }
 }

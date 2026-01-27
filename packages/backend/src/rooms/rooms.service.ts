@@ -1,51 +1,43 @@
 import { Injectable } from '@nestjs/common';
-
-export interface Room {
-  id: string;
-  name: string;
-  created: string;
-  code?: string;
-  language?: string;
-  participants?: Array<{
-    id: string;
-    username: string;
-    joinedAt: string;
-  }>;
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Room } from './rooms.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RoomsService {
-  private rooms: Map<string, Room> = new Map();
+  constructor(
+    @InjectRepository(Room)
+    private roomRepository: Repository<Room>,
+  ) {}
 
-  createRoom(name?: string): Room {
-    const id = this.generateRoomId();
+  createRoom(): Room {
+    const shortId = this.generateRoomShortId();
     const room: Room = {
-      id,
-      name: name || `Комната ${id}`,
-      created: new Date().toISOString(),
+      id: uuidv4(),
+      shortId,
       code: '// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();',
-      language: 'javascript',
-      participants: [],
     };
 
-    this.rooms.set(id, room);
+    this.roomRepository.save(room);
     return room;
   }
 
-  getRoom(roomId: string): Room | undefined {
-    return this.rooms.get(roomId);
+  getRoom(roomId: string): Promise<Room | undefined> {
+    return this.roomRepository.findOne({ where: { shortId: roomId } });
   }
 
-  updateRoomCode(roomId: string, code: string): boolean {
-    const room = this.rooms.get(roomId);
-    if (room) {
-      room.code = code;
-      return true;
+  async updateRoomCode(roomId: string, code: string): Promise<boolean> {
+    const room = await this.roomRepository.findOne({ where: { shortId: roomId } });
+    if (!room) {
+      return false;
     }
-    return false;
+    room.code = code;
+    await this.roomRepository.save(room);
+    return true;
   }
 
-  private generateRoomId(): string {
+  private generateRoomShortId(): string {
     return Math.random().toString(36).substring(2, 10);
   }
 }
