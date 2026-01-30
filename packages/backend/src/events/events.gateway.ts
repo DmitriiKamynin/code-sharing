@@ -72,8 +72,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const { roomId, code } = data;
     // Отправляем результат всем участникам комнаты, включая отправителя
-    this.server
-      .to(roomId)
-      .emit('run', await this.workersService.runCode(code, roomId));
+    await this.workersService.runCode(code, roomId);
+  }
+
+  async sendExecutionResult(roomId: string, result: string) {
+    this.server.to(roomId).emit('run', result);
   }
 }

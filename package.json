@@ -7,9 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:engine\"",
     "dev:backend": "npm run start:dev --workspace=packages/backend",
     "dev:frontend": "npm run start --workspace=packages/frontend",
+    "dev:engine": "npm run dev --workspace=packages/engine",
     "build": "npm run build --workspaces",
     "build:backend": "npm run build --workspace=packages/backend",
     "build:frontend": "npm run build --workspace=packages/frontend",
