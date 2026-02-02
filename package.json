@@ -7,13 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:engine\"",
-    "dev:backend": "npm run start:dev --workspace=packages/backend",
-    "dev:frontend": "npm run start --workspace=packages/frontend",
-    "dev:engine": "npm run dev --workspace=packages/engine",
-    "build": "npm run build --workspaces",
-    "build:backend": "npm run build --workspace=packages/backend",
-    "build:frontend": "npm run build --workspace=packages/frontend",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
     "start": "npm run start:prod --workspace=packages/backend",
     "start:backend": "npm run start:prod --workspace=packages/backend",
     "start:frontend": "npm run start --workspace=packages/frontend",
@@ -22,8 +17,9 @@
     "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist packages/*/build",
     "install:all": "npm install"
   },
+  "packageManager": "npm@10.9.3",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "turbo": "^2.8.1"
   },
   "engines": {
     "node": ">=18.0.0",

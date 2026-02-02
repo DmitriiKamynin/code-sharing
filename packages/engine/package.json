@@ -1,5 +1,5 @@
 {
-  "name": "engine",
+  "name": "@code-sharing/engine",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
