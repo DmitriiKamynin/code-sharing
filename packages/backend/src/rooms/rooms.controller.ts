@@ -10,7 +10,7 @@ import {
 import { RoomsService } from './rooms.service';
 import { Room } from './rooms.entity';
 
-@Controller('api/rooms')
+@Controller('/api/rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 

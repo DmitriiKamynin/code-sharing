@@ -4,11 +4,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { CodeChangeData } from '../types';
 
+const API_URL = process.env['REACT_APP_BACKEND_URL']
+
 const CodeEditor: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>() as { roomId: string };
   const navigate = useNavigate();
   const [code, setCode] = useState<string>('// Добро пожаловать в совместный редактор кода!\n// Начните писать код здесь...\n\nfunction hello() {\n    console.log("Привет, мир!");\n}\n\nhello();');
-  const [isConnected, setIsConnected] = useState<boolean>(true);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
   const [socket, setSocket] = useState<Socket>();
   const [terminalOutput, setTerminalOutput] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -16,11 +18,11 @@ const CodeEditor: React.FC = () => {
 
   useEffect(() => {
 
-    fetch(`http://localhost:3001/api/rooms/${roomId}`)
+    fetch(`${API_URL}/api/rooms/${roomId}`)
       .then(res => res.json())
       .then(res => setCode(res.code));
 
-    const socket = io('http://localhost:3001', { query: { roomId } });
+    const socket = io(API_URL, { query: { roomId } });
     setSocket(socket);
 
     const handleConnect = () => {

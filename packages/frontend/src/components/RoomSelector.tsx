@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:3001/api/rooms';
+const API_URL = process.env['REACT_APP_BACKEND_URL'];
 
 interface RoomResponse {
   id: string;
@@ -14,7 +14,7 @@ const RoomSelector: React.FC = () => {
   const createRoom = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/api/rooms`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
