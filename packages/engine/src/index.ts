@@ -2,13 +2,19 @@ import { Worker, Queue } from 'bullmq';
 import { exec } from 'node:child_process';
 import { unlink, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
+import { config } from 'dotenv';
+
+config();
+
+const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+const REDIS_PORT = +(process.env.REDIS_PORT || 6379);
 
 const execAsync = promisify(exec);
 
 const TMP_PATH = 'tmp';
 
 const resultQueue = new Queue('code-result-queue', {
-  connection: { host: 'localhost', port: 6379 },
+  connection: { host: REDIS_HOST, port: REDIS_PORT },
 });
 
 new Worker('run-code-queue', async (job) => {
@@ -26,7 +32,7 @@ new Worker('run-code-queue', async (job) => {
     }
 }, {
   connection: {
-    host: 'localhost',
-    port: 6379,
+    host: REDIS_HOST,
+    port: REDIS_PORT,
   },
 });
