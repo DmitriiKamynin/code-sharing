@@ -18,14 +18,16 @@ const resultQueue = new Queue('code-result-queue', {
 });
 
 new Worker('run-code-queue', async (job) => {
+    console.log('[WorkerGetJob] Name:', job.name);
     const { code, roomId } = job.data;
     const fileName = `${roomId}-${new Date().getTime()}.js`;
     await writeFile(`${TMP_PATH}/${fileName}`, code);
     try {
       const result = await execAsync(`node ${TMP_PATH}/${fileName}`);
       await resultQueue.add('code-complited-job', { roomId, result: result.stdout });
+      console.log('[WorkerSuccess]');
     } catch (error: any) {
-      console.error(error);
+      console.error('[WorkerError] Error:', error);
       await resultQueue.add('code-complited-job', { roomId, result: error.stderr });
     } finally {
       await unlink(`${TMP_PATH}/${fileName}`);
