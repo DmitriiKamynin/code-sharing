@@ -5,7 +5,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - DATABASE_URL=postgresql://root:root@172.17.0.1:5432/cs
+      - DATABASE_URL=${DATABASE_URL}
     ports:
       - "8080:8080"
     networks:

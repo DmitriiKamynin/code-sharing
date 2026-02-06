@@ -11,4 +11,4 @@ jobs:
       - name: Build Docker
         run: docker compose build
       - name: Run Docker
-        run: docker compose up
+        run: docker compose up -e DATABASE_URL={{ vars.DATABASE_URL }}
