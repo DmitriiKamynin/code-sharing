@@ -12,4 +12,4 @@ jobs:
       - name: Build Docker
         run: docker compose build
       - name: Run Docker
-        run: export DATABASE_URL=${{ secrets.DATABASE_URL }} && docker compose up
+        run: export DATABASE_URL=${{ secrets.DATABASE_URL }} && docker compose up -d
