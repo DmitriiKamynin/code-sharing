@@ -17,7 +17,7 @@ COPY packages/frontend ./packages/frontend
 
 RUN npm ci
 
-ARG REACT_APP_BACKEND_URL=http://localhost:8080
+ARG REACT_APP_BACKEND_URL=http://212.67.17.231:8080
 
 RUN npm run build
 
