@@ -21,8 +21,8 @@ new Worker('run-code-queue', async (job) => {
     console.log('[WorkerGetJob] Name:', job.name);
     const { code, roomId } = job.data;
     const fileName = `${roomId}-${new Date().getTime()}.js`;
-    await writeFile(`${TMP_PATH}/${fileName}`, code);
     try {
+      await writeFile(`${TMP_PATH}/${fileName}`, code);
       const result = await execAsync(`node ${TMP_PATH}/${fileName}`);
       await resultQueue.add('code-complited-job', { roomId, result: result.stdout });
       console.log('[WorkerSuccess]');
@@ -30,7 +30,8 @@ new Worker('run-code-queue', async (job) => {
       console.error('[WorkerError] Error:', error);
       await resultQueue.add('code-complited-job', { roomId, result: error.stderr });
     } finally {
-      await unlink(`${TMP_PATH}/${fileName}`);
+      await unlink(`${TMP_PATH}/${fileName}`)
+        .catch((error) => console.error('[WorkerError] File deletion error:', error));
     }
 }, {
   connection: {
