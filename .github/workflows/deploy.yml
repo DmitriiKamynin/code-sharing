@@ -12,4 +12,7 @@ jobs:
       - name: Build Docker
         run: docker compose build
       - name: Run Docker
-        run: export DATABASE_URL=${{ secrets.DATABASE_URL }} && docker compose up -d
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          LOKI_URL: ${{ variables.LOKI_URL }}
+        run: docker compose up -d
