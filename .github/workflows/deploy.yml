@@ -14,5 +14,5 @@ jobs:
       - name: Run Docker
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          LOKI_URL: ${{ variables.LOKI_URL }}
+          LOKI_URL: ${{ vars.LOKI_URL }}
         run: docker compose up -d
